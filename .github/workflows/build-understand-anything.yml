@@ -1,4 +1,4 @@
-name: Build Understand Anything Plugin
+name: Build Understand Anything Portable Plugin
 
 on:
   workflow_dispatch:
@@ -20,19 +20,29 @@ jobs:
           node-version: 22
 
       - name: Show versions
+        working-directory: understand-anything-plugin
         run: |
           node --version
           pnpm --version
 
-      - name: Install dependencies
+      - name: Configure portable pnpm
+        working-directory: understand-anything-plugin
+        shell: bash
+        run: |
+          cat > .npmrc <<'EOF'
+          store-dir=.pnpm-store
+          package-import-method=copy
+          prefer-offline=true
+          offline=false
+          registry=https://registry.npmjs.org/
+          EOF
+          cat .npmrc
+
+      - name: Install dependencies into local store
         working-directory: understand-anything-plugin
         run: pnpm install --no-frozen-lockfile
 
-      - name: Show workspace packages
-        working-directory: understand-anything-plugin
-        run: pnpm -r list --depth -1
-
-      - name: Build core first
+      - name: Build core
         working-directory: understand-anything-plugin
         run: pnpm --filter "./packages/core" build
 
@@ -40,11 +50,30 @@ jobs:
         working-directory: understand-anything-plugin
         run: pnpm --filter "./packages/dashboard" exec vite build
 
-      - name: Pack built plugin
-        run: tar -czf understand-anything-plugin-built.tgz understand-anything-plugin
+      - name: Verify vite exists
+        shell: pwsh
+        run: |
+          Test-Path "understand-anything-plugin/packages/dashboard/node_modules/.bin/vite.cmd"
+          Get-ChildItem "understand-anything-plugin/packages/dashboard/node_modules/.bin" | Select-Object Name
 
-      - name: Upload built plugin
+      - name: Switch package to offline mode
+        working-directory: understand-anything-plugin
+        shell: bash
+        run: |
+          cat > .npmrc <<'EOF'
+          store-dir=.pnpm-store
+          package-import-method=copy
+          prefer-offline=true
+          offline=true
+          registry=https://registry.npmjs.org/
+          EOF
+          cat .npmrc
+
+      - name: Pack portable plugin
+        run: tar -czf understand-anything-plugin-portable.tgz understand-anything-plugin
+
+      - name: Upload portable plugin
         uses: actions/upload-artifact@v4
         with:
-          name: understand-anything-plugin-built
-          path: understand-anything-plugin-built.tgz
+          name: understand-anything-plugin-portable
+          path: understand-anything-plugin-portable.tgz

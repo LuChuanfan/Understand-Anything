@@ -34,27 +34,11 @@ jobs:
 
       - name: Build core first
         working-directory: understand-anything-plugin
-        run: pnpm --filter ./packages/core build
+        run: pnpm --filter "./packages/core" build
 
-      - name: Patch dashboard build script to skip tsc typecheck
-        shell: pwsh
-        run: |
-          $pkg = "understand-anything-plugin/packages/dashboard/package.json"
-          @@@MATH_INLINE_0_END@@@pkg -Raw | ConvertFrom-Json
-
-          Write-Host "Old dashboard build script:"
-          Write-Host $json.scripts.build
-
-          $json.scripts.build = "vite build"
-
-          @@@MATH_INLINE_1_END@@@pkg -Encoding UTF8
-
-          Write-Host "New dashboard build script:"
-          Get-Content $pkg
-
-      - name: Build dashboard
+      - name: Build dashboard with vite only
         working-directory: understand-anything-plugin
-        run: pnpm --filter ./packages/dashboard build
+        run: pnpm --filter "./packages/dashboard" exec vite build
 
       - name: Pack built plugin
         run: tar -czf understand-anything-plugin-built.tgz understand-anything-plugin

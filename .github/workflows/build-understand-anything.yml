@@ -1,0 +1,44 @@
+name: Build Understand Anything Plugin
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.6.2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Show versions
+        run: |
+          node --version
+          pnpm --version
+
+      - name: Install dependencies
+        working-directory: understand-anything-plugin
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Build plugin
+        working-directory: understand-anything-plugin
+        run: pnpm build
+
+      - name: Pack built plugin
+        run: tar -czf understand-anything-plugin-built.tgz understand-anything-plugin
+
+      - name: Upload built plugin
+        uses: actions/upload-artifact@v4
+        with:
+          name: understand-anything-plugin-built
+          path: understand-anything-plugin-built.tgz

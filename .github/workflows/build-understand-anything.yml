@@ -5,16 +5,14 @@ on:
 
 jobs:
   build:
-    runs-on: windows-latest
+    runs-on: windows-2022
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup pnpm
+      - name: Setup pnpm from packageManager
         uses: pnpm/action-setup@v4
-        with:
-          version: 10.6.2
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
